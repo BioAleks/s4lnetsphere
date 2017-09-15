@@ -1,4 +1,4 @@
-# NetspherePirates [![Build status](https://ci.appveyor.com/api/projects/status/xih9n36ar655rayl/branch/master?svg=true)](https://ci.appveyor.com/project/wtfblub/netspherepirates/branch/master)
+# NetspherePirates [![Build status](https://ci.appveyor.com/api/projects/status/xih9n36ar655rayl/branch/master?svg=true)](https://ci.appveyor.com/project/BioAleks/s4lnetsphere)
 Experimental S4 League server emulator for patch 34(EU v1139 - Season 1).
 
 ### Requirements
