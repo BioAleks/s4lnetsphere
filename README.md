@@ -11,7 +11,8 @@ Experimental S4 League server emulator for patch 34(EU v1139 - Season 1).
 * MySQL Server and program for work with databases (example: Navicat).
 
 This server with last working build and free to modify, but have copyrights for Blublib.
-Creator: https://github.com/wtfblub
+
+Server creator: https://github.com/wtfblub
 
 In this build added: 
 * Scene Class Fix (by iBreak97)
