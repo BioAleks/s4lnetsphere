@@ -9,3 +9,11 @@ Experimental S4 League server emulator for patch 34(EU v1139 - Season 1).
 * **On Linux:** [.Net Core 2](https://www.microsoft.com/net/core)
 * S4 League Client - Patch 34(EU v1139): [Download(mega.nz - 450 MB)](https://mega.nz/#!yYMGFYiZ!NTbARFyS8EVjItp1nNTZD9-0WJDO2uK_08ajWoTaUwo)
 * MySQL Server and program for work with databases (example: Navicat).
+
+This server with last working build and free to modify, but have copyrights for Blublib.
+Creator: https://github.com/wtfblub
+
+In this build added: 
+* Scene Class Fix (by iBreak97)
+* Completing P2P implementation (by GameRaiderCC)
+* Implementing Quickstart (by Demon0no)
