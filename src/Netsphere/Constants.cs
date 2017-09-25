@@ -268,7 +268,6 @@
         // SMG3 - DualGun
         // HandGun
         // SMG4 BurstShotGun
-        // SpyDagger
         HeavymachineGun = 5,
         GaussRifle = 27,
         RailGun = 6,

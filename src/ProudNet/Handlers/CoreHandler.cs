@@ -7,7 +7,6 @@ using BlubLib.Collections.Generic;
 using BlubLib.Collections.Concurrent;
 using BlubLib.DotNetty;
 using BlubLib.DotNetty.Handlers.MessageHandling;
-using BlubLib.Security.Cryptography;
 using DotNetty.Buffers;
 using DotNetty.Transport.Channels;
 using ProudNet.Codecs;
@@ -35,7 +34,7 @@ namespace ProudNet.Handlers
             {
                 context.FireChannelRead(buffer);
             }
-            catch (Exception e)
+            catch (Exception e) // TODO: What is this try/catch?
             {
             }
         }
@@ -213,6 +212,8 @@ namespace ProudNet.Handlers
             connectionStateA.RemotePeer.LocalEndPoint = message.LocalEndPoint;
             connectionStateA.PeerUdpHolepunchSuccess = true;
 
+            connectionState.PeerUdpHolepunchSuccess = true;
+            var connectionStateB = connectionState.RemotePeer.ConnectionStates[session.HostId];
             if (connectionStateB.PeerUdpHolepunchSuccess)
             {
                 A.SendAsync(new RequestP2PHolepunchMessage(message.HostId, B.Session.UdpLocalEndPoint, new IPEndPoint(connectionStateA.RemotePeer.EndPoint.Address, connectionStateB.RemotePeer.LocalEndPoint.Port)));
