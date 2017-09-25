@@ -16,3 +16,8 @@ Server creator: https://github.com/wtfblub
 
 In this last build added: 
 * Completing P2P implementation (by GameRaiderCC)
+
+In this build added: 
+* Scene Class Fix (by iBreak97)
+* Completing P2P implementation (by GameRaiderCC)
+* Implementing Quickstart (by Demon0no)
