@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using BlubLib.DotNetty.Codecs;
 using DotNetty.Buffers;
 using DotNetty.Transport.Channels;
