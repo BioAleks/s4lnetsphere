@@ -57,16 +57,17 @@ namespace ProudNet.Handlers
 
             if (session.HostId == remotePeerA.HostId)
                 stateA.HolepunchSuccess = true;
-            if (session.HostId == remotePeerB.HostId)
+            else if (session.HostId == remotePeerB.HostId)
                 stateB.HolepunchSuccess = true;
 
-            //if (stateA.HolepunchSuccess && stateB.HolepunchSuccess) //prevents from working correctly
-            //{
-            //}
+            if (stateA.HolepunchSuccess && stateB.HolepunchSuccess)
+            {
+                var notify = new NotifyDirectP2PEstablishMessage(message.A, message.B, message.ABSendAddr, message.ABRecvAddr,
+                    message.BASendAddr, message.BARecvAddr);
 
-            var notify = new NotifyDirectP2PEstablishMessage(message.A, message.B, message.ABSendAddr, message.ABRecvAddr, message.BASendAddr, message.BARecvAddr);
-            remotePeerA.SendAsync(notify);
-            remotePeerB.SendAsync(notify);
+                remotePeerA.SendAsync(notify);
+                remotePeerB.SendAsync(notify);
+            }
         }
 
         [MessageHandler(typeof(ShutdownTcpMessage))]
@@ -101,15 +102,14 @@ namespace ProudNet.Handlers
 
             if (session.HostId == remotePeerA.HostId)
                 stateA.JitTriggered = true;
-            if (session.HostId == remotePeerB.HostId)
+            else if (session.HostId == remotePeerB.HostId)
                 stateB.JitTriggered = true;
 
-            //if (stateA.JitTriggered && stateB.JitTriggered) //prevents from working correctly
-            //{
-            //}
-
-            remotePeerA.SendAsync(new NewDirectP2PConnectionMessage(remotePeerB.HostId));
-            remotePeerB.SendAsync(new NewDirectP2PConnectionMessage(remotePeerA.HostId));
+            if (stateA.JitTriggered && stateB.JitTriggered)
+            {
+                remotePeerA.SendAsync(new NewDirectP2PConnectionMessage(remotePeerB.HostId));
+                remotePeerB.SendAsync(new NewDirectP2PConnectionMessage(remotePeerA.HostId));
+            }
         }
 
         [MessageHandler(typeof(NotifyNatDeviceNameDetectedMessage))]
