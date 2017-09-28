@@ -22,6 +22,9 @@ namespace Netsphere
 {
     internal class Program
     {
+        private static readonly object s_exitMutex = new object();
+        private static bool s_isExiting;
+
         public static Stopwatch AppTime { get; } = Stopwatch.StartNew();
 
         private static void Main()
@@ -30,14 +33,16 @@ namespace Netsphere
             {
                 Converters = new List<JsonConverter> { new IPEndPointConverter() }
             };
-            
-            var jsonlog = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "auth.json");
-            var logfile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "auth.log");
+
+            var jsonlog = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "game.json");
+            var logfile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "game.log");
             Log.Logger = new LoggerConfiguration()
+                .Destructure.ByTransforming<IPEndPoint>(endPoint => endPoint.ToString())
+                .Destructure.ByTransforming<EndPoint>(endPoint => endPoint.ToString())
                 .WriteTo.File(new JsonFormatter(), jsonlog)
                 .WriteTo.File(logfile)
                 .WriteTo.Console(outputTemplate: "[{Level} {SourceContext}] {Message}{NewLine}{Exception}")
-                .MinimumLevel.Verbose()
+                .MinimumLevel.Debug()
                 .CreateLogger();
 
             AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
@@ -53,19 +58,35 @@ namespace Netsphere
             LicenseIdGenerator.Initialize();
             DenyIdGenerator.Initialize();
 
-            ChatServer.Initialize(new Configuration());
-            RelayServer.Initialize(new Configuration());
-            GameServer.Initialize(new Configuration());
+            var listenerThreads = new MultithreadEventLoopGroup(Config.Instance.ListenerThreads);
+            var workerThreads = new MultithreadEventLoopGroup(Config.Instance.WorkerThreads);
+            var workerThread = new SingleThreadEventLoop();
+            ChatServer.Initialize(new Configuration
+            {
+                SocketListenerThreads = listenerThreads,
+                SocketWorkerThreads = workerThreads,
+                WorkerThread = workerThread
+            });
+            RelayServer.Initialize(new Configuration
+            {
+                SocketListenerThreads = listenerThreads,
+                SocketWorkerThreads = workerThreads,
+                WorkerThread = workerThread
+            });
+            GameServer.Initialize(new Configuration
+            {
+                SocketListenerThreads = listenerThreads,
+                SocketWorkerThreads = workerThreads,
+                WorkerThread = workerThread
+            });
 
             FillShop();
 
             Log.Information("Starting server...");
 
-            var listenerThreads = new MultithreadEventLoopGroup(Config.Instance.ListenerThreads);
-            var workerThreads = new MultithreadEventLoopGroup(Config.Instance.WorkerThreads);
-            ChatServer.Instance.Listen(Config.Instance.ChatListener, listenerEventLoopGroup: listenerThreads, workerEventLoopGroup: workerThreads);
-            RelayServer.Instance.Listen(Config.Instance.RelayListener, IPAddress.Parse(Config.Instance.IP), Config.Instance.RelayUdpPorts, listenerThreads, workerThreads);
-            GameServer.Instance.Listen(Config.Instance.Listener, listenerEventLoopGroup: listenerThreads, workerEventLoopGroup: workerThreads);
+            ChatServer.Instance.Listen(Config.Instance.ChatListener);
+            RelayServer.Instance.Listen(Config.Instance.RelayListener, IPAddress.Parse(Config.Instance.IP), Config.Instance.RelayUdpPorts);
+            GameServer.Instance.Listen(Config.Instance.Listener);
 
             Log.Information("Ready for connections!");
 
@@ -102,11 +123,19 @@ namespace Netsphere
 
         private static void Exit()
         {
-            Log.Information("Closing...");
+            lock (s_exitMutex)
+            {
+                if (s_isExiting)
+                    return;
 
-            ChatServer.Instance.Dispose();
-            RelayServer.Instance.Dispose();
-            GameServer.Instance.Dispose();
+                s_isExiting = true;
+            }
+
+            Log.Information("Closing...");
+            var chat = Task.Run(() => ChatServer.Instance.Dispose());
+            var relay = Task.Run(() => RelayServer.Instance.Dispose());
+            var game = Task.Run(() => GameServer.Instance.Dispose());
+            Task.WaitAll(chat, relay, game);
         }
 
         private static void OnUnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)

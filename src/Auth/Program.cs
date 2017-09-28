@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.Net;
 using System.Threading.Tasks;
 using BlubLib.Threading.Tasks;
 using Dapper;
@@ -23,6 +24,8 @@ namespace Netsphere
     {
         private static IEventLoopGroup s_apiEventLoopGroup;
         private static IChannel s_apiHost;
+        private static readonly object s_exitMutex = new object();
+        private static bool s_isExiting;
 
         private static void Main()
         {
@@ -34,10 +37,12 @@ namespace Netsphere
             var jsonlog = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "auth.json");
             var logfile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "auth.log");
             Log.Logger = new LoggerConfiguration()
+                .Destructure.ByTransforming<IPEndPoint>(endPoint => endPoint.ToString())
+                .Destructure.ByTransforming<EndPoint>(endPoint => endPoint.ToString())
                 .WriteTo.File(new JsonFormatter(), jsonlog)
                 .WriteTo.File(logfile)
                 .WriteTo.Console(outputTemplate: "[{Level} {SourceContext}] {Message}{NewLine}{Exception}")
-                .MinimumLevel.Verbose()
+                .MinimumLevel.Debug()
                 .CreateLogger();
 
             AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
@@ -47,7 +52,12 @@ namespace Netsphere
 
             Log.Information("Starting server...");
 
-            AuthServer.Initialize(new Configuration());
+            AuthServer.Initialize(new Configuration
+            {
+                SocketListenerThreads = new MultithreadEventLoopGroup(1),
+                SocketWorkerThreads = new MultithreadEventLoopGroup(1),
+                WorkerThread = new SingleThreadEventLoop()
+            });
             AuthServer.Instance.Listen(Config.Instance.Listener);
 
             s_apiEventLoopGroup = new MultithreadEventLoopGroup(1);
@@ -89,6 +99,14 @@ namespace Netsphere
 
         private static void Exit()
         {
+            lock (s_exitMutex)
+            {
+                if (s_isExiting)
+                    return;
+
+                s_isExiting = true;
+            }
+
             Log.Information("Closing...");
             s_apiHost.CloseAsync().WaitEx();
             s_apiEventLoopGroup.ShutdownGracefullyAsync().WaitEx();
