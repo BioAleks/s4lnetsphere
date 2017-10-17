@@ -320,6 +320,10 @@ namespace ProudNet
                             member.SendAsync(new NotifyUdpToTcpFallbackByServerMessage());
                         }
                     }
+                    
+                    // Skip p2p stuff when not enabled
+                    if(!group.AllowDirectP2P)
+                        continue;
 
                     // Retry p2p holepunch
                     foreach (var stateA in member.ConnectionStates.Values)
@@ -333,13 +337,13 @@ namespace ProudNet
                             var diff = now - stateA.LastHolepunch;
                             if (!stateA.HolepunchSuccess && diff >= server.Configuration.HolepunchTimeout)
                             {
-                                member.Session.Logger?.Information("Trying to reconnect P2P to {TargetHostId}", stateA.RemotePeer.HostId);
-                                stateA.RemotePeer.Session.Logger?.Information("Trying to reconnect P2P to {TargetHostId}", member.HostId);
-                                stateA.JitTriggered = stateB.JitTriggered = false;
-                                stateA.PeerUdpHolepunchSuccess = stateB.PeerUdpHolepunchSuccess = false;
-                                stateA.LastHolepunch = stateB.LastHolepunch = now;
-                                member.SendAsync(new RenewP2PConnectionStateMessage(stateA.RemotePeer.HostId));
-                                stateA.RemotePeer.SendAsync(new RenewP2PConnectionStateMessage(member.HostId));
+                                //member.Session.Logger?.Information("Trying to reconnect P2P to {TargetHostId}", stateA.RemotePeer.HostId);
+                                //stateA.RemotePeer.Session.Logger?.Information("Trying to reconnect P2P to {TargetHostId}", member.HostId);
+                                //stateA.JitTriggered = stateB.JitTriggered = false;
+                                //stateA.PeerUdpHolepunchSuccess = stateB.PeerUdpHolepunchSuccess = false;
+                                //stateA.LastHolepunch = stateB.LastHolepunch = now;
+                                //member.SendAsync(new RenewP2PConnectionStateMessage(stateA.RemotePeer.HostId));
+                                //stateA.RemotePeer.SendAsync(new RenewP2PConnectionStateMessage(member.HostId));
                                 //member.SendAsync(new P2PRecycleCompleteMessage(stateA.RemotePeer.HostId));
                                 //stateA.RemotePeer.SendAsync(new P2PRecycleCompleteMessage(member.HostId));
                             }
